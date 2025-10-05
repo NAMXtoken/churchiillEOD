@@ -69,6 +69,13 @@ function doPost(e) {
       appended = values.length;
     }
 
+    // Write the sheet name in dd/MM/yy format into G28
+    try {
+      var rawName = sheet.getName();
+      var formattedName = formatSheetName_(rawName); // e.g., 061025 -> 06/10/25
+      sheet.getRange(28, 7).setValue(formattedName); // G28
+    } catch (_) {}
+
     return json_({ ok: true, appended, sheet: sheet.getName() });
   } catch (err) {
     return json_({ ok: false, error: String(err) }, 500);
@@ -176,4 +183,11 @@ function safeNumber_(v) {
   if (v == null || v === '') return '';
   const n = Number(v);
   return isNaN(n) ? '' : n;
+}
+
+function formatSheetName_(name) {
+  // Expecting ddMMyy; return dd/MM/yy. Fallback to original if unexpected.
+  var m = String(name || '').match(/^(\d{2})(\d{2})(\d{2})$/);
+  if (!m) return String(name || '');
+  return m[1] + '/' + m[2] + '/' + m[3];
 }

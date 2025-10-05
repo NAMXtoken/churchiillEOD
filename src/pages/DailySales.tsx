@@ -1,15 +1,15 @@
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
-import { fetchSheetRange, saveDailySales } from "@/lib/api";
-import { toast } from "sonner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parse } from "date-fns";
-import { useParams } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchSheetRange, saveDailySales } from "@/lib/api";
+import { format, parse } from "date-fns";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 const TIME_OPTIONS = ["HH", "D", "LN"] as const;
 const PMNT_OPTIONS = ["Cash", "PPay", "Master", "Visa"] as const;
@@ -24,6 +24,7 @@ const DailySales = () => {
   const selectedSheet = useMemo(() => (selectedDate ? format(selectedDate, "ddMMyy") : undefined), [selectedDate]);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [showOrd, setShowOrd] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -66,12 +67,18 @@ const DailySales = () => {
 
   const onSave = async () => {
     try {
-      const nonEmpty = rows.filter(r => (r.ord || r.time || r.amount || r.payment || r.covers));
-      if (nonEmpty.length === 0) {
+      const toSave = rows.reduce((acc: any[], r, i) => {
+        const filled = r.ord || r.time || r.amount || r.payment || r.covers;
+        if (filled) {
+          acc.push({ ...r, ord: r.ord || String(i + 1) });
+        }
+        return acc;
+      }, []);
+      if (toSave.length === 0) {
         toast.info("No rows to save.");
         return;
       }
-      await saveDailySales(nonEmpty as any, selectedSheet);
+      await saveDailySales(toSave as any, selectedSheet);
       toast.success("Report saved to Google Sheet.");
     } catch (e: any) {
       toast.error(e?.message || "Failed to save report");
@@ -95,7 +102,7 @@ const DailySales = () => {
   return (
     <div className="min-h-screen bg-background p-4 pb-24">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-card rounded-lg shadow-lg p-4 sm:p-8">
+        <div className="sm:bg-card sm:rounded-lg sm:shadow-lg sm:p-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-primary">
             Daily Sales Report
           </h1>
@@ -120,6 +127,13 @@ const DailySales = () => {
             </Popover>
             <Button
               variant="outline"
+              className="sm:hidden"
+              onClick={() => setShowOrd((v) => !v)}
+            >
+              {showOrd ? "Hide Ord #" : "Show Ord #"}
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => selectedSheet && navigate(`/eod-report/${selectedSheet}`)}
               disabled={!selectedSheet}
               className="w-full sm:w-auto"
@@ -137,20 +151,20 @@ const DailySales = () => {
               <span className="text-xs text-muted-foreground">Sheet: {selectedSheet}</span>
             )}
           </div>
-          
+
           <div className="space-y-6">
 
             <div className="mt-8">
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-primary">Sales Summary</h2>
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-primary">Sales Summary</h2>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-primary">
-                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground">Ord #</th>
-                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground">Time Block</th>
-                      <th className="border border-table-border p-2 sm:p-3 text-right text-xs sm:text-sm text-primary-foreground">Amount</th>
-                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground">Pmnt Type</th>
-                      <th className="border border-table-border p-2 sm:p-3 text-center text-xs sm:text-sm text-primary-foreground">Covers</th>
+                      <th className={`border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground ${showOrd ? "table-cell" : "hidden sm:table-cell"}`}>Ord #</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground w-20 sm:w-24 whitespace-nowrap">Time Block</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-right text-xs sm:text-sm text-primary-foreground w-16">Amount</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground w-20 sm:w-24 whitespace-nowrap">Pmnt Type</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-center text-xs sm:text-sm text-primary-foreground w-12 sm:w-16">Covers</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -166,7 +180,7 @@ const DailySales = () => {
                       ))
                     )}
                     {!loading && rows.slice(0, visibleCount).map((row, idx) => (
-                      <>
+                      <React.Fragment key={`rowgrp-${idx}`}>
                         {idx === insertionIndex && (
                           <tr key={`actions-${idx}`}>
                             <td colSpan={5} className="p-2">
@@ -186,12 +200,18 @@ const DailySales = () => {
                           </tr>
                         )}
                         <tr key={`row-${idx}`} className={idx % 2 === 0 ? "bg-table-row-alt" : ""}>
-                          <td className="border border-table-border p-1.5 sm:p-2">
-                            <Input type="text" value={row.ord} onChange={(e) => onChange(idx, 'ord', e.target.value)} className="h-8" />
+                          <td className={`border border-table-border p-1.5 sm:p-2 ${showOrd ? "table-cell" : "hidden sm:table-cell"}`}>
+                            <Input
+                              type="text"
+                              value={row.ord}
+                              placeholder={String(idx + 1)}
+                              onChange={(e) => onChange(idx, 'ord', e.target.value)}
+                              className="h-8"
+                            />
                           </td>
-                          <td className="border border-table-border p-1.5 sm:p-2">
+                          <td className="border border-table-border p-1.5 sm:p-2 w-20 sm:w-24">
                             <Select value={row.time || undefined} onValueChange={(val) => onChange(idx, 'time', val)}>
-                              <SelectTrigger className="h-8">
+                              <SelectTrigger className="h-8 w-full min-w-0">
                                 <SelectValue placeholder="Select" />
                               </SelectTrigger>
                               <SelectContent>
@@ -201,12 +221,12 @@ const DailySales = () => {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="border border-table-border p-1.5 sm:p-2">
-                            <Input type="number" step="0.01" value={row.amount} onChange={(e) => onChange(idx, 'amount', e.target.value)} className="h-8 text-right" />
+                          <td className="border border-table-border p-1.5 sm:p-2 w-16">
+                            <Input type="number" step="0.01" value={row.amount} onChange={(e) => onChange(idx, 'amount', e.target.value)} className="h-8 text-right w-16 min-w-0" />
                           </td>
-                          <td className="border border-table-border p-1.5 sm:p-2">
+                          <td className="border border-table-border p-1.5 sm:p-2 w-20 sm:w-24">
                             <Select value={row.payment || undefined} onValueChange={(val) => onChange(idx, 'payment', val)}>
-                              <SelectTrigger className="h-8">
+                              <SelectTrigger className="h-8 w-full min-w-0">
                                 <SelectValue placeholder="Select" />
                               </SelectTrigger>
                               <SelectContent>
@@ -216,18 +236,23 @@ const DailySales = () => {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="border border-table-border p-1.5 sm:p-2">
-                            <Input type="number" value={row.covers} onChange={(e) => onChange(idx, 'covers', e.target.value)} className="h-8 text-center" />
+                          <td className="border border-table-border p-1.5 sm:p-2 w-12 sm:w-16">
+                            <Input
+                              type="number"
+                              value={row.covers}
+                              onChange={(e) => onChange(idx, 'covers', e.target.value)}
+                              className="h-8 text-center w-10 sm:w-12 min-w-0"
+                            />
                           </td>
                         </tr>
-                      </>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
               </div>
             </div>
 
-            
+
           </div>
         </div>
       </div>

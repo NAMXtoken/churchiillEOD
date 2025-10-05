@@ -49,7 +49,13 @@ const Example: React.FC = () => {
           {error && <div className="text-sm text-destructive">{error}</div>}
           {!loading && !error && (
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse table-fixed">
+                <colgroup>
+                  <col className="w-40 sm:w-56" />
+                  {Array.from({ length: Math.max(columns - 1, 0) }).map((_, i) => (
+                    <col key={i} className="w-24 sm:w-32" />
+                  ))}
+                </colgroup>
                 <thead>
                   <tr className="bg-gray-100 dark:bg-gray-800">
                     {Array.from({ length: columns }).map((_, cIdx) => (
@@ -60,12 +66,15 @@ const Example: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {values.slice(1).map((row, rIdx) => {
-                    const first = (row?.[0] || "").toString().trim();
-                    const isSection = first.toLowerCase().startsWith("breakdown") || first.toLowerCase().startsWith("daily revenue");
-                    const rowClass = isSection ? "bg-gray-100 dark:bg-gray-800 font-semibold" : (rIdx % 2 === 0 ? "bg-table-row-alt" : "");
-                    return (
-                      <tr key={rIdx} className={rowClass}>
+                  {values
+                    .slice(1)
+                    .filter((row) => !row.some((cell) => (cell || "").toString().toLowerCase().includes("all sales")))
+                    .map((row, rIdx) => {
+                      const first = (row?.[0] || "").toString().trim();
+                      const isSection = first.toLowerCase().startsWith("breakdown") || first.toLowerCase().startsWith("daily revenue");
+                      const rowClass = isSection ? "bg-gray-100 dark:bg-gray-800 font-semibold" : (rIdx % 2 === 0 ? "bg-table-row-alt" : "");
+                      return (
+                        <tr key={rIdx} className={rowClass}>
                         {Array.from({ length: Math.max(columns, row.length) }).map((_, cIdx) => (
                           <td key={cIdx} className="border border-table-border p-2 text-xs sm:text-sm">
                             {row[cIdx] ?? ""}
