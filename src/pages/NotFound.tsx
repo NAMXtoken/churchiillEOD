@@ -1,8 +1,10 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
@@ -17,6 +19,7 @@ const NotFound = () => {
           Return to Home
         </Link>
       </div>
+      <Button className="fixed bottom-6 right-6 z-50" onClick={() => navigate("/")}>Home</Button>
     </div>
   );
 };

@@ -9,7 +9,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { format, parse } from "date-fns";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Button as UIButton } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const TIME_OPTIONS = ["HH", "D", "LN"] as const;
@@ -94,19 +93,19 @@ const DailySales = () => {
   const visibleCount = Math.max(1, Math.min(rows.length, lastFilledIndex + 2));
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-20">
+    <div className="min-h-screen bg-background p-4 pb-24">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-card rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-center mb-8 text-primary">
+        <div className="bg-card rounded-lg shadow-lg p-4 sm:p-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-primary">
             Daily Sales Report
           </h1>
-          <UIButton className="fixed bottom-6 right-6 z-50" onClick={() => navigate("/")}>Home</UIButton>
+          <Button className="fixed bottom-6 right-6 z-50" onClick={() => navigate("/")}>Home</Button>
 
-          <div className="flex items-center justify-end mb-6 gap-2">
-            <span className="text-sm text-muted-foreground">Date:</span>
+          <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-end mb-4 sm:mb-6 gap-2 sm:gap-3">
+            <span className="text-xs sm:text-sm text-muted-foreground">Date:</span>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-40 justify-start">
+                <Button variant="outline" className="w-full sm:w-40 justify-start">
                   {selectedDate ? format(selectedDate, "dd/MM/yy") : "Pick date"}
                 </Button>
               </PopoverTrigger>
@@ -123,6 +122,7 @@ const DailySales = () => {
               variant="outline"
               onClick={() => selectedSheet && navigate(`/eod-report/${selectedSheet}`)}
               disabled={!selectedSheet}
+              className="w-full sm:w-auto"
             >
               View EOD Report
             </Button>
@@ -141,16 +141,16 @@ const DailySales = () => {
           <div className="space-y-6">
 
             <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4 text-primary">Sales Summary</h2>
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-primary">Sales Summary</h2>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-primary">
-                      <th className="border border-table-border p-3 text-left text-primary-foreground">Ord #</th>
-                      <th className="border border-table-border p-3 text-left text-primary-foreground">Time Block</th>
-                      <th className="border border-table-border p-3 text-right text-primary-foreground">Amount</th>
-                      <th className="border border-table-border p-3 text-left text-primary-foreground">Pmnt Type</th>
-                      <th className="border border-table-border p-3 text-center text-primary-foreground">Covers</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground">Ord #</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground">Time Block</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-right text-xs sm:text-sm text-primary-foreground">Amount</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-left text-xs sm:text-sm text-primary-foreground">Pmnt Type</th>
+                      <th className="border border-table-border p-2 sm:p-3 text-center text-xs sm:text-sm text-primary-foreground">Covers</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -170,25 +170,26 @@ const DailySales = () => {
                         {idx === insertionIndex && (
                           <tr key={`actions-${idx}`}>
                             <td colSpan={5} className="p-2">
-                              <div className="flex gap-4 justify-end">
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-end items-stretch sm:items-center">
                                 <Button
                                   variant="outline"
                                   onClick={() =>
                                     setRows(Array.from({ length: 30 }, () => ({ ord: "", time: "", amount: "", payment: "", covers: "" })))
                                   }
+                                  className="w-full sm:w-auto"
                                 >
                                   Clear
                                 </Button>
-                                <Button onClick={onSave}>Save Report</Button>
+                                <Button onClick={onSave} className="w-full sm:w-auto">Save Report</Button>
                               </div>
                             </td>
                           </tr>
                         )}
                         <tr key={`row-${idx}`} className={idx % 2 === 0 ? "bg-table-row-alt" : ""}>
-                          <td className="border border-table-border p-2">
+                          <td className="border border-table-border p-1.5 sm:p-2">
                             <Input type="text" value={row.ord} onChange={(e) => onChange(idx, 'ord', e.target.value)} className="h-8" />
                           </td>
-                          <td className="border border-table-border p-2">
+                          <td className="border border-table-border p-1.5 sm:p-2">
                             <Select value={row.time || undefined} onValueChange={(val) => onChange(idx, 'time', val)}>
                               <SelectTrigger className="h-8">
                                 <SelectValue placeholder="Select" />
@@ -200,10 +201,10 @@ const DailySales = () => {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="border border-table-border p-2">
+                          <td className="border border-table-border p-1.5 sm:p-2">
                             <Input type="number" step="0.01" value={row.amount} onChange={(e) => onChange(idx, 'amount', e.target.value)} className="h-8 text-right" />
                           </td>
-                          <td className="border border-table-border p-2">
+                          <td className="border border-table-border p-1.5 sm:p-2">
                             <Select value={row.payment || undefined} onValueChange={(val) => onChange(idx, 'payment', val)}>
                               <SelectTrigger className="h-8">
                                 <SelectValue placeholder="Select" />
@@ -215,7 +216,7 @@ const DailySales = () => {
                               </SelectContent>
                             </Select>
                           </td>
-                          <td className="border border-table-border p-2">
+                          <td className="border border-table-border p-1.5 sm:p-2">
                             <Input type="number" value={row.covers} onChange={(e) => onChange(idx, 'covers', e.target.value)} className="h-8 text-center" />
                           </td>
                         </tr>
